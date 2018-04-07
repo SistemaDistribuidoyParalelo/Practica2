@@ -7,3 +7,5 @@ Practica2 de Sistema Distribuido y Paralelo
 	- Coste y distribucion del trabajo en los procesos
 	- Debe haber mas.
 
+gcc -pthread ejercicioX.c -o ejercicioX
+
