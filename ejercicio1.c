@@ -5,29 +5,42 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define ORDENXFILAS 1
-#define ORDENXCOLUMNAS 0
+#define ORDENXFILAS 0
+#define ORDENXCOLUMNAS 1
 int N=100;
 
 struct matriz_parametros
 {
     double *M; //Matriz(arreglo) COMPLETO pero recorremos una porcion de la misma
-    int indice_recorrer; //indice maximo a recorrer
+    double *M2; //Matriz(arreglo) COMPLETO pero recorremos una porcion de la misma
+    double *Mresultado;
+    int indice_recorrer_total; //indice maximo a recorrer
+    int indice_recorrer_parcial; // indice parcial o mitad para recorrer
+
 
 };
+//imprimir matriz
+void imprimeMatriz(double *S,int N,int r){
+// Imprime la matriz pasada por parametro
+// N es la cantidad de bloques, r dimension de cada bloque
+  int i,j,I,J,despB;
 
-//Para calcular tiempo
-void *proceso1(void *arg){
-    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-    printf("%d \n", mp_1->indice_recorrer);
-    printf("%f del arreglo \n",mp_1->M[1]);
-    return NULL ;
-}
+  printf("Contenido de la matriz: \n" );
+  for (I= 0; I< N; I++){
+    //para cada fila de bloques (I)
+    for (i= 0; i< r; i++){
+       for(J=0;J<N;J++){
+		   despB=(I*N+J)*r*r;
+	  for (j=0;j<r;j++){
+	     printf("%f ",S[despB+ i*r+j]);
+	
+	   };//end for j
+	};//end for J
+        printf("\n ");
+     };//end for i
 
-void *proceso2(void *arg){
-    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-    printf("%d \n", mp_1->indice_recorrer);
-    return NULL ;
+  };//end for I
+  printf(" \n\n");
 }
 
 //Retorna el valor de la matriz en la posicion fila y columna segun el orden que este ordenada
@@ -48,6 +61,71 @@ void setValor(double *matriz,int fila,int columna,int orden,double valor){
  }
 }
 
+
+//Para calcular tiempo
+void *proceso1(void *arg){
+    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
+    printf("%d \n", mp_1->indice_recorrer_total);
+    
+    
+    /*
+    void *proceso1(void *arg){
+    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
+    printf("%d \n", mp_1->indice_recorrer);
+    printf("%f del arreglo \n",mp_1->M[1]);
+
+    int i = indice_recorrer/2;  // o 4 segun en cuanto tenga q partir la matriz_parametros
+    int j = ; // indice para guardar en la matriz 3
+    int m=0; // indice para recorrer de a 4 en una matriz de 4x4 tendria q ser generico segun el tamanio de la matriz
+    int resultadoparcial=0;
+    int t=0; // indice para manejar el inicio del for
+    while(i < indice_recorrer){
+      for (size_t a = t; a < i; a++) { // recorro la matriz 1
+        resultado=resultado + matriz1[i]*matriz2[m]
+        m=m+4;
+      }
+      matriz3[j]=resultado; // guardo el resultado en la matriz 3
+      j++;  // incremento para guardar en la siguiente posicion de la matriz3
+      t=t+4;// arranco en la siguiente fila
+      m=j; // para que la matriz 2 arranque en la posicion siguiente
+      i=t*2;// siguiente limite que tendria que ser de la mitad al final
+
+    }
+
+    return NULL ;
+}
+    */
+
+    for(int i=0; i < (mp_1->indice_recorrer_total) ; i++){//Recorro la fila desde 0 hasta la mitad parcial
+        for(int j=0;j< (mp_1->indice_recorrer_parcial);j++){//Recorro la columna desde 0 hasta la mitad parcial
+            for(int k=0;k<(mp_1->indice_recorrer_parcial);k++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
+            setValor(mp_1->Mresultado,i,j,ORDENXFILAS, getValor(mp_1->Mresultado,i,j,ORDENXFILAS) + getValor(mp_1->M,i,k,ORDENXFILAS)*getValor(mp_1->M2,k,j,ORDENXFILAS));
+            }
+    }
+  }   
+
+    return NULL ;
+}
+
+void *proceso2(void *arg){
+    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
+    printf("%d \n", mp_1->indice_recorrer_total);
+    
+//i=a j=b k=c
+    for(int a = 0; a < (mp_1->indice_recorrer_total) ; a++){ //Recorro la fila dsde 0 hasta la mitad parcial
+        for(int b=mp_1->indice_recorrer_parcial;b< (mp_1->indice_recorrer_total);b++){ // Recorro la columna dsede la mitad para delante
+            for(int c=mp_1->indice_recorrer_parcial;c<(mp_1->indice_recorrer_total);c++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
+            setValor(mp_1->Mresultado,a,b,ORDENXFILAS, getValor(mp_1->Mresultado,a,b,ORDENXFILAS) + getValor(mp_1->M,a,b,ORDENXFILAS)*getValor(mp_1->M2,c,b,ORDENXFILAS));
+            }
+    }
+  }   
+
+
+    
+    return NULL ;
+}
+
+
 double dwalltime(){
         double sec;
         struct timeval tv;
@@ -60,10 +138,10 @@ int main ( int argc , char * argv []) {
     //declaraciones
     pthread_t h1 ;
     pthread_t h2 ;
-    double *A,*B;
+    double *A,*B,*C;
     struct matriz_parametros mp;
     int N = 100; // inicio por las dudas
-    
+    int check = 0;
     //Controla los argumentos al programa
      if ((argc != 2) || ((N = atoi(argv[1])) <= 0) )
     {
@@ -73,17 +151,26 @@ int main ( int argc , char * argv []) {
     //Inicializa las matrices A y B en 1, el resultado sera una matriz con todos sus valores en N
     A=(double*)malloc(sizeof(double)*N*N);
     B=(double*)malloc(sizeof(double)*N*N);
+    C=(double*)malloc(sizeof(double)*N*N);
     
     for(int i=0;i<N;i++){
         for(int j=0;j<N;j++){
             setValor(A,i,j,ORDENXFILAS,1);
             setValor(B,i,j,ORDENXFILAS,1);
+            setValor(B,i,j,ORDENXFILAS,0);
+         
         }
     }   
+  /*  imprimeMatriz(A,1,2);
+    imprimeMatriz(B,1,2);
+    imprimeMatriz(C,1,2);
+    */
     //Solucion con los hilos, arrancamos con los parametos a pasar
-
     mp.M = A;
-    mp.indice_recorrer = N/2;    
+    mp.M2 = B;
+    mp.Mresultado = C;
+    mp.indice_recorrer_total = N;    
+    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores
 
     double tiempoStart= dwalltime();
     pthread_create(&h1,NULL,proceso1 ,&mp);
@@ -92,6 +179,11 @@ int main ( int argc , char * argv []) {
     pthread_join(h1,NULL);
     printf ( "Fin \n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
+    //Verifica el resultado
+    C = mp.Mresultado;
+    imprimeMatriz(C,2,2);
+   
     free(A);
     free(B);
+    free(C);
 }
