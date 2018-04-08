@@ -7,7 +7,7 @@
 
 #define ORDENXFILAS 0
 #define ORDENXCOLUMNAS 1
-int N=100;
+int N = 100; // inicio por las dudas
 
 struct matriz_parametros
 {
@@ -27,7 +27,7 @@ void imprimeMatriz(double *S,int N){
   printf(" \n");
   for(int i=0;i<N;i++){
         for(int j=0;j<N;j++){
-            printf("%f  ",S[j+i*N]);
+            printf("%f  ",S[i+j*N]);
         }
         printf(" \n");
   }
@@ -85,7 +85,7 @@ void *proceso1(void *arg){
 }
     */
 
-    for(int i=0; i < (mp_1->indice_recorrer_total) ; i++){//Recorro la fila desde 0 hasta la mitad parcial
+    for(int i=0; i < (mp_1->indice_recorrer_parcial) ; i++){//Recorro la fila desde 0 hasta la mitad parcial
         for(int j=0;j< (mp_1->indice_recorrer_total);j++){//Recorro la columna desde 0 hasta la mitad parcial
             for(int k=0;k<(mp_1->indice_recorrer_total);k++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
             setValor(mp_1->Mresultado,i,j,ORDENXFILAS, getValor(mp_1->Mresultado,i,j,ORDENXFILAS) + getValor(mp_1->M,i,k,ORDENXFILAS)*getValor(mp_1->M2,k,j,ORDENXFILAS));
@@ -100,11 +100,10 @@ void *proceso2(void *arg){
     struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
     printf("%d \n", mp_1->indice_recorrer_total);
     
-//i=a j=b k=c
     for(int a = mp_1->indice_recorrer_parcial; a < (mp_1->indice_recorrer_total) ; a++){ //Recorro la fila dsde 0 hasta la mitad parcial
-        for(int b=mp_1->indice_recorrer_parcial;b< (mp_1->indice_recorrer_total);b++){ // Recorro la columna dsede la mitad para delante
-            for(int c=mp_1->indice_recorrer_parcial;c<(mp_1->indice_recorrer_total);c++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
-            setValor(mp_1->Mresultado,a,b,ORDENXFILAS, getValor(mp_1->Mresultado,a,b,ORDENXFILAS) + getValor(mp_1->M,a,b,ORDENXFILAS)*getValor(mp_1->M2,c,b,ORDENXFILAS));
+        for(int b=0;b< (mp_1->indice_recorrer_total);b++){//Recorro la columna desde 0 hasta la mitad parcial
+            for(int c=0;c<(mp_1->indice_recorrer_total);c++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
+            setValor(mp_1->Mresultado,a,b,ORDENXFILAS, getValor(mp_1->Mresultado,a,b,ORDENXFILAS) + getValor(mp_1->M,a,c,ORDENXFILAS)*getValor(mp_1->M2,c,b,ORDENXFILAS));
             }
     }
   }   
@@ -129,8 +128,8 @@ int main ( int argc , char * argv []) {
     pthread_t h2 ;
     double *A,*B,*C;
     struct matriz_parametros mp;
-    int N = 100; // inicio por las dudas
-    int check = 0;
+   
+    int check = 1;
     //Controla los argumentos al programa
      if ((argc != 2) || ((N = atoi(argv[1])) <= 0) )
     {
@@ -159,20 +158,29 @@ int main ( int argc , char * argv []) {
     mp.M2 = B;
     mp.Mresultado = C;
     mp.indice_recorrer_total = N;    
-    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores
+    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores 
+    //ese 2 tiene que ser la cantidad de hilos a recorrer
 
     double tiempoStart= dwalltime();
     pthread_create(&h1,NULL,proceso1 ,&mp);
-    //pthread_create(&h2,NULL, proceso2 ,&mp);
-    //pthread_join(h2,NULL);
+    pthread_create(&h2,NULL, proceso2 ,&mp);
+    pthread_join(h2,NULL);
     pthread_join(h1,NULL);
     printf ( "Fin \n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
    
- //Verifica el resultado
+    //Verifica el resultado
+    
+    if(check){
+    printf("Multiplicacion de matrices resultado correcto\n");
+    }else{
+    printf("Multiplicacion de matrices resultado erroneo\n");
+    }
+
     C = mp.Mresultado;
     imprimeMatriz(C,N);
    
+
     free(A);
     free(B);
     free(C);
