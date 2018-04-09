@@ -16,8 +16,6 @@ struct matriz_parametros
     double *Mresultado;
     int indice_recorrer_total; //indice maximo a recorrer
     int indice_recorrer_parcial; // indice parcial o mitad para recorrer
-
-
 };
 //imprimir matriz
 void imprimeMatriz(double *S,int N){
