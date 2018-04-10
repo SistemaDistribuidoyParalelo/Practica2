@@ -14,43 +14,45 @@ struct matriz_parametros
 
 };
 
+
+
+
 //Para calcular tiempo
 void *proceso1(void *arg){
-    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
+  printf("In funtion \nthread id = %d\n", pthread_self());
 
-    for(int i = 0;i<mp_1->indice_recorrer_parcial;i++){
+    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
+    int i;
+    for( i= 0;i<mp_1->indice_recorrer_parcial;i++){
       if(mp_1->M[i]  > mp_1->variablesGuardar[0] ) //busco maximo
         {
             mp_1->variablesGuardar[0] = mp_1->M[i];
-            printf("%f\n",  mp_1->variablesGuardar[0] );
         }
         if(mp_1->M[i] < mp_1->variablesGuardar[2]  ) //busco minimo
 
             {
                 mp_1->variablesGuardar[2] = mp_1->M[i];
-                printf("%f\n",  mp_1->variablesGuardar[2] );
 
             }
 
     }
+
     return NULL ;
 }
 
 void *proceso2(void *arg){
     struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-
-    for(int i =mp_1->indice_recorrer_parcial;i<mp_1->indice_recorrer_total;i++){
+    int i;
+    for(i =mp_1->indice_recorrer_parcial;i<mp_1->indice_recorrer_total;i++){
       if(mp_1->M[i]  > mp_1->variablesGuardar[1] ) //busco maximo
         {
             mp_1->variablesGuardar[1] = mp_1->M[i];
-            printf("%f\n",  mp_1->variablesGuardar[1] );
 
         }
       if(mp_1->M[i] < mp_1->variablesGuardar[3]  ) //busco minimo
 
             {
                 mp_1->variablesGuardar[3] = mp_1->M[i];
-                printf("%f\n",  mp_1->variablesGuardar[3] );
 
             }
 
@@ -88,7 +90,6 @@ int main ( int argc , char * argv []) {
         A[i] = rand() % N;
         printf("%f    ",A[i]);
     }
-
     printf("\n");
     B[0] = -1;
     B[1] = -1;
@@ -103,13 +104,12 @@ int main ( int argc , char * argv []) {
 
     double tiempoStart= dwalltime();
     pthread_create(&h1,NULL,proceso1 ,&mp);
-    //pthread_create(&h2,NULL, proceso2 ,&mp);
-    //pthread_join(h2,NULL);
+    pthread_create(&h2,NULL, proceso2 ,&mp);
+    pthread_join(h2,NULL);
     pthread_join(h1,NULL);
     printf ( "Fin \n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
     printf("\n");
-
 
     if(mp.variablesGuardar[0] >= mp.variablesGuardar[1]){
       printf("el valor maximo es %f\n",mp.variablesGuardar[0] );
