@@ -21,7 +21,10 @@ void *proceso1(void *arg){
         for(int j = 0; j<mp->tamParcial; j++){
             suma1=suma1+mp->V[j];
         }
-        mp->C[0]=(suma1/mp->tamParcial);
+        double res = (double)suma1;
+        double divi= (double)mp->tamParcial;
+        double fin=(res/divi);
+        mp->C[0]=fin;
 
         return NULL;
 }
@@ -34,7 +37,10 @@ void *proceso2(void *arg){
             suma2=suma2+mp->V[i];
 
         }
-        mp->C[1]=(suma2/mp->tamParcial);
+        double res = (double)suma2;
+        double divi= (double)mp->tamParcial;
+        double fin=(res/divi);
+        mp->C[1]=fin;
 
 
         return NULL;
@@ -72,8 +78,10 @@ int main (int argc , char * argv []) {
     pthread_create(&h2,NULL, proceso2 ,&mp);
     pthread_join(h1,NULL);
     pthread_join(h2,NULL);
-    int resultado = ((double)(mp.C[0]+mp.C[1])/2);
-    printf("el promedio ENTERO es %d\n",resultado );
+    double resultado = ((mp.C[0]+mp.C[1]));
+    double dividirTam= (double)2;
+    double promedio = (resultado/dividirTam);
+    printf("el promedio es %f\n",promedio );
     printf("\n");
     return 1;
 }
