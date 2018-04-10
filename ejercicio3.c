@@ -17,17 +17,21 @@ struct matriz_parametros
 //Para calcular tiempo
 void *proceso1(void *arg){
     struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-    
+
     for(int i = 0;i<mp_1->indice_recorrer_parcial;i++){
-        if(mp_1->variablesGuardar[0] < mp_1->M[i] ) //busco maximo
+      if(mp_1->M[i]  > mp_1->variablesGuardar[0] ) //busco maximo
         {
             mp_1->variablesGuardar[0] = mp_1->M[i];
+            printf("%f\n",  mp_1->variablesGuardar[0] );
         }
-        if(mp_1->variablesGuardar[1] > mp_1->M[i] ) //busco minimo
+        if(mp_1->M[i] < mp_1->variablesGuardar[2]  ) //busco minimo
+
             {
-                mp_1->variablesGuardar[1] = mp_1->M[i];
+                mp_1->variablesGuardar[2] = mp_1->M[i];
+                printf("%f\n",  mp_1->variablesGuardar[2] );
+
             }
-        
+
     }
     return NULL ;
 }
@@ -35,6 +39,22 @@ void *proceso1(void *arg){
 void *proceso2(void *arg){
     struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
 
+    for(int i =mp_1->indice_recorrer_parcial;i<mp_1->indice_recorrer_total;i++){
+      if(mp_1->M[i]  > mp_1->variablesGuardar[1] ) //busco maximo
+        {
+            mp_1->variablesGuardar[1] = mp_1->M[i];
+            printf("%f\n",  mp_1->variablesGuardar[1] );
+
+        }
+      if(mp_1->M[i] < mp_1->variablesGuardar[3]  ) //busco minimo
+
+            {
+                mp_1->variablesGuardar[3] = mp_1->M[i];
+                printf("%f\n",  mp_1->variablesGuardar[3] );
+
+            }
+
+    }
     return NULL ;
 }
 
@@ -67,16 +87,18 @@ int main ( int argc , char * argv []) {
     for(int i=0;i<N;i++){
         A[i] = rand() % N;
         printf("%f    ",A[i]);
-    }   
+    }
 
     printf("\n");
     B[0] = -1;
-    B[1] = 99999;
-    
+    B[1] = -1;
+    B[2] = 99999;
+    B[3] = 99999;
+
     mp.M = A;
     mp.variablesGuardar = B;
-    mp.indice_recorrer_total = N;    
-    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores 
+    mp.indice_recorrer_total = N;
+    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores
     //ese 2 tiene que ser la cantidad de hilos a recorrer
 
     double tiempoStart= dwalltime();
@@ -86,12 +108,23 @@ int main ( int argc , char * argv []) {
     pthread_join(h1,NULL);
     printf ( "Fin \n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
-    printf("%f    ",mp.variablesGuardar[0]);
-    printf("%f    \n",mp.variablesGuardar[1]);
+    printf("\n");
 
+
+    if(mp.variablesGuardar[0] >= mp.variablesGuardar[1]){
+      printf("el valor maximo es %f\n",mp.variablesGuardar[0] );
+    }else{
+      printf("el valor maximo es %f\n",mp.variablesGuardar[1] );
+    }
+    printf("\n");
+    if(mp.variablesGuardar[2] <= mp.variablesGuardar[3]){
+      printf("el valor minimo es %f\n",mp.variablesGuardar[2] );
+    }else{
+      printf("el valor minmo es %f\n",mp.variablesGuardar[3] );
+    }
 
     //Verifica el resultad
     free(A);
     free(B);
-    
+
 }
