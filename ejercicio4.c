@@ -19,24 +19,24 @@ void *proceso1(void *arg){
     int auxM;
     int valorMinimo = 9999999;
     struct matriz_parametros *mp = (struct matriz_parametros *)arg;
-    
+
     for(int i=0; i<mp->tamParcial;i++){
         //Recorremos ordenando todo
-        indiceMinimo = i; 
+        indiceMinimo = i;
         valorMinimo = 9999999;
         for(int j = i; j<mp->tamParcial; j++){
             if(mp->V[j] < valorMinimo){
                 valorMinimo = mp->V[j];
                 indiceMinimo = j;
-            }                   
+            }
         }
         auxM = mp->V[i];
         mp->V[i] = mp->V[indiceMinimo];
         mp->V[indiceMinimo] = auxM;
-       
+
     }
         return NULL;
-} 
+}
 
 
 void *proceso2(void *arg){
@@ -44,21 +44,21 @@ void *proceso2(void *arg){
     int auxM;
     int valorMinimo = 9999999;
     struct matriz_parametros *mp = (struct matriz_parametros *)arg;
-    
+
     for(int i=mp->tamParcial; i<mp->tam;i++){
         //Recorremos ordenando todo
-        indiceMinimo = i; 
+        indiceMinimo = i;
         valorMinimo = 9999999;
         for(int j = i; j<mp->tam; j++){
             if(mp->V[j] < valorMinimo){
                 valorMinimo = mp->V[j];
                 indiceMinimo = j;
-            }                   
+            }
         }
         auxM = mp->V[i];
         mp->V[i] = mp->V[indiceMinimo];
         mp->V[indiceMinimo] = auxM;
-       
+
     }
         return NULL;
 }
@@ -69,17 +69,17 @@ int main (int argc , char * argv []) {
     int *A,*B;
     int N;
     struct matriz_parametros mp;
-    
+
     if ((argc != 2) || ((N = atoi(argv[1])) <= 0) )
     {
         printf("\nUsar: %s n\n  n: Dimension de la matriz (nxn X nxn)\n", argv[0]);
         exit(1);
     }
-    
+
     //Inicio del arreglo
     A=(int*)malloc(sizeof(int)*N);
     B=(int*)malloc(sizeof(int)*N);
-    
+
     for(int i=0; i<N;i++){
         A[i] = rand() % N;
         printf("%d ", A[i]);
@@ -97,25 +97,35 @@ int main (int argc , char * argv []) {
         printf("%d ", mp.V[i]);
     }
     printf("\n");
-    
+
     //Hasta aca funciona sin merge
     int recorridoI = 0 ;
     int recorridoJ = mp.tamParcial;
     int pos = 0;
-    while((recorridoI <= mp.tamParcial ) && (recorridoJ <= mp.tam)){
+    while((recorridoI < mp.tamParcial ) && (recorridoJ < mp.tam)){
         if(mp.V[recorridoI] <= mp.V[recorridoJ]){
             B[pos] = mp.V[recorridoI];
             recorridoI++;
+            pos++;
         }else{
             B[pos] = mp.V[recorridoJ];
             recorridoJ++;
+            pos++;
+
         }
-        pos++;
     }
-    
-    
+    while (recorridoI < mp.tamParcial) {
+    B[pos] = mp.V[recorridoI];
+    pos++;
+    recorridoI++;
+    }
+    while (recorridoJ < mp.tam) {
+    B[pos] = mp.V[recorridoJ];
+    pos++;
+    recorridoJ++;
+    }
     for(int i=0; i<N;i++){
-        printf("%d ", mp.V[i]);
+        printf("%d ", B[i]);
     }
     printf("\n");
     return 1;
