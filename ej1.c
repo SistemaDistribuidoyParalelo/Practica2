@@ -59,11 +59,11 @@ void recorridoParcial(int inicio, int finalParcial, int totalMatriz){
             setValor(Mresultado,inicio,j,ORDENXFILAS, getValor(Mresultado,inicio,j,ORDENXFILAS) + getValor(M,inicio,k,ORDENXFILAS)*getValor(M2,k,j,ORDENXFILAS));
             }
     }
-  }   
+  }
 }
 //Para calcular tiempo
 void *proceso1(void *arg){
-    int ID = (int)arg;
+    int ID = *(int *)arg;
     printf("el ID = %d \n",ID );
 
     switch(ID){
@@ -77,17 +77,17 @@ void *proceso1(void *arg){
 void *proceso2(void *arg){
     struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
     printf("%d \n", mp_1->indice_recorrer_total);
-    
+
     for(int a = mp_1->indice_recorrer_parcial; a < (mp_1->indice_recorrer_total) ; a++){ //Recorro la fila dsde 0 hasta la mitad parcial
         for(int b=0;b< (mp_1->indice_recorrer_total);b++){//Recorro la columna desde 0 hasta la mitad parcial
             for(int c=0;c<(mp_1->indice_recorrer_total);c++){ // Realiza todas las multiplicaciones y sumas aprciales hasta obtener el resultado en esa posicion de matriz
             setValor(mp_1->Mresultado,a,b,ORDENXFILAS, getValor(mp_1->Mresultado,a,b,ORDENXFILAS) + getValor(mp_1->M,a,c,ORDENXFILAS)*getValor(mp_1->M2,c,b,ORDENXFILAS));
             }
     }
-  }   
+  }
 
 
-    
+
     return NULL ;
 }
 
@@ -103,7 +103,7 @@ double dwalltime(){
 
 int main ( int argc , char * argv []) {
     //declaraciones
-    pthread_t h[N]; 
+    pthread_t h[N];
     int ID[N];
     double *A,*B,*C;
     int cantHilos;
@@ -117,23 +117,23 @@ int main ( int argc , char * argv []) {
     M=(double*)malloc(sizeof(double)*N*N);
     M2=(double*)malloc(sizeof(double)*N*N);
     Mresultado=(double*)malloc(sizeof(double)*N*N);
-    
+
     for(int i=0;i<N;i++){
         for(int j=0;j<N;j++){
             setValor(M,i,j,ORDENXFILAS,1);
             setValor(M2,i,j,ORDENXFILAS,1);
             setValor(Mresultado,i,j,ORDENXFILAS,0);
-         
+
         }
-    }   
+    }
     imprimeMatriz(M,N);
     imprimeMatriz(M2,N);
     imprimeMatriz(Mresultado,N);
-   
+
     //Solucion con los hilos, arrancamos con los parametos a pasar
-    indice_recorrer_total = N;    
-    indice_recorrer_parcial = indice_recorrer_total / cantHilos; 
-    //Para recorrer la primera mitad de los valores 
+    indice_recorrer_total = N;
+    indice_recorrer_parcial = indice_recorrer_total / cantHilos;
+    //Para recorrer la primera mitad de los valores
 
     double tiempoStart= dwalltime();
     for(int i = 1; i<=N;i++){
@@ -143,14 +143,14 @@ int main ( int argc , char * argv []) {
      for(int i = 1; i<=N;i++){
          pthread_join(h[i],NULL);
     }
-   
-   
-    
+
+
+
     printf ( "Fin \n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
-   
+
     //Verifica el resultado
-    
+
     if(check){
     printf("Multiplicacion de matrices resultado correcto\n");
     }else{
