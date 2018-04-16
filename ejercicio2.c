@@ -32,8 +32,6 @@ void *proceso1(void *arg){
       if(ID == 2){tam=(3*N)/4;ini=N/2;}
       if(ID == 3){tam=N;ini=(3*N)/4;}
     }
-    printf("\n");
-    printf("\nEl hilo %d analiza el vector desde la posicion %d hasta la posicion %d \n",ID,ini,tam );
     for(int j = ini; j<tam; j++){
         if(A[j] == valor){
             B[ID]++;

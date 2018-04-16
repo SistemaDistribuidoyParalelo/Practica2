@@ -5,122 +5,114 @@
 #include <unistd.h>
 #include <pthread.h>
 
-struct matriz_parametros
 
-{
     int *V;
-    int tam;
-    int tamParcial;
-
-};
+    int *B;
+    int N;
+    int T;
+    double dwalltime(){
+            double sec;
+            struct timeval tv;
+            int tiempo = gettimeofday(&tv,NULL);
+            sec = tv.tv_sec + tv.tv_usec/1000000.0;
+            return sec;
+    }
 
 void *proceso1(void *arg){
     int indiceMinimo =0;
     int auxM;
     int valorMinimo = 9999999;
-    struct matriz_parametros *mp = (struct matriz_parametros *)arg;
-
-    for(int i=0; i<mp->tamParcial;i++){
-        //Recorremos ordenando todo
-        indiceMinimo = i;
-        valorMinimo = 9999999;
-        for(int j = i; j<mp->tamParcial; j++){
-            if(mp->V[j] < valorMinimo){
-                valorMinimo = mp->V[j];
-                indiceMinimo = j;
-            }
-        }
-        auxM = mp->V[i];
-        mp->V[i] = mp->V[indiceMinimo];
-        mp->V[indiceMinimo] = auxM;
-
+    int ID = *(int*)arg;
+    int tam,ini;
+    if(T==2){
+    if(ID == 0){tam=N/2;ini=0;}
+    else{
+      ini=N/2;
+      tam=N;
+    }}else{
+      if(ID == 0){tam=N/4;ini=0;}
+      if(ID == 1){tam=N/2;ini=N/4;}
+      if(ID == 2){tam=(3*N)/4;ini=N/2;}
+      if(ID == 3){tam=N;ini=(3*N)/4;}
     }
-        return NULL;
-}
 
-
-void *proceso2(void *arg){
-    int indiceMinimo =0;
-    int auxM;
-    int valorMinimo = 9999999;
-    struct matriz_parametros *mp = (struct matriz_parametros *)arg;
-
-    for(int i=mp->tamParcial; i<mp->tam;i++){
+    for(int i=ini; i<tam;i++){
         //Recorremos ordenando todo
         indiceMinimo = i;
         valorMinimo = 9999999;
-        for(int j = i; j<mp->tam; j++){
-            if(mp->V[j] < valorMinimo){
-                valorMinimo = mp->V[j];
+        for(int j = i; j<tam; j++){
+            if(V[j] < valorMinimo){
+                valorMinimo = V[j];
                 indiceMinimo = j;
             }
         }
-        auxM = mp->V[i];
-        mp->V[i] = mp->V[indiceMinimo];
-        mp->V[indiceMinimo] = auxM;
+        auxM = V[i];
+        V[i] = V[indiceMinimo];
+        V[indiceMinimo] = auxM;
 
     }
         return NULL;
 }
 
 int main (int argc , char * argv []) {
-    pthread_t h1 ;
-    pthread_t h2 ;
-    int *A,*B;
-    int N;
-    struct matriz_parametros mp;
+  if ((argc != 3) )
+  {
+      printf("\nUsar: %s n\n  n: Dimension de la matriz (nxn X nxn)\n", argv[0]);
+      exit(1);
+  }
+  T=atoi(argv[2]);
+  N=atoi(argv[1]);
+  if ((T== 2)||(T==4)) {
+    printf("Se van a utilizar %d Hilos \n",T );
+  //DECLARACION DE VARIABLES
+  pthread_t misHilos[T];
+  int threads_ids[T];
+  //RESERVA DE MEMORIA DE VECTORES
+  V=(int*)malloc(sizeof(int)*N);
+  B=(int*)malloc(sizeof(int)*T);
+  //  INICIALIZACION DE VECTORES
 
-    if ((argc != 2) || ((N = atoi(argv[1])) <= 0) )
-    {
-        printf("\nUsar: %s n\n  n: Dimension de la matriz (nxn X nxn)\n", argv[0]);
-        exit(1);
+  for(int i=0; i<N;i++){
+      V[i] = rand() % N;
+      printf("%d ", V[i]);
+  }
+  // INICIALIZACION DE HILOS
+  double tiempoStart= dwalltime();
+  for(int id=0;id<T;id++){
+      threads_ids[id] = id;
+      pthread_create(&misHilos[id],NULL,proceso1,(void*)&threads_ids[id]);
+  }
+     for(int i = 1; i<T;i++){
+         pthread_join(misHilos[i],NULL);
     }
+    printf("\n" );
+    printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
 
-    //Inicio del arreglo
-    A=(int*)malloc(sizeof(int)*N);
-    B=(int*)malloc(sizeof(int)*N);
-
-    for(int i=0; i<N;i++){
-        A[i] = rand() % N;
-        printf("%d ", A[i]);
-    }
-    printf("\n");
-    // Cargamos estructura para usar en los hilos
-    mp.V = A;
-    mp.tam = N;
-    mp.tamParcial = N/2; // dividido 2 por la cantidad de hilos
-    pthread_create(&h1,NULL,proceso1 ,&mp);
-    pthread_create(&h2,NULL, proceso2 ,&mp);
-    pthread_join(h1,NULL);
-    pthread_join(h2,NULL);
-    for(int i=0; i<N;i++){
-        printf("%d ", mp.V[i]);
-    }
-    printf("\n");
 
     //Hasta aca funciona sin merge
     int recorridoI = 0 ;
-    int recorridoJ = mp.tamParcial;
+    int recorridoJ = N/T;
     int pos = 0;
-    while((recorridoI < mp.tamParcial ) && (recorridoJ < mp.tam)){
-        if(mp.V[recorridoI] <= mp.V[recorridoJ]){
-            B[pos] = mp.V[recorridoI];
+    int recorridoparcial=N/T;
+    while((recorridoI < recorridoparcial ) && (recorridoJ < N)){
+        if(V[recorridoI] <= V[recorridoJ]){
+            B[pos] = V[recorridoI];
             recorridoI++;
             pos++;
         }else{
-            B[pos] = mp.V[recorridoJ];
+            B[pos] = V[recorridoJ];
             recorridoJ++;
             pos++;
 
         }
     }
-    while (recorridoI < mp.tamParcial) {
-    B[pos] = mp.V[recorridoI];
+    while (recorridoI < recorridoparcial) {
+    B[pos] = V[recorridoI];
     pos++;
     recorridoI++;
     }
-    while (recorridoJ < mp.tam) {
-    B[pos] = mp.V[recorridoJ];
+    while (recorridoJ < N) {
+    B[pos] = V[recorridoJ];
     pos++;
     recorridoJ++;
     }
@@ -129,4 +121,4 @@ int main (int argc , char * argv []) {
     }
     printf("\n");
     return 1;
-}
+}}

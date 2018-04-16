@@ -5,58 +5,48 @@
 #include <unistd.h>
 #include <pthread.h>
 
-struct matriz_parametros
-{
-    double *M; //Matriz(arreglo) COMPLETO pero recorremos una porcion de la misma
-    double *variablesGuardar;
-    int indice_recorrer_total; //indice maximo a recorrer
-    int indice_recorrer_parcial; // indice parcial o mitad para recorrer
 
+struct tipo{
+  int max;
+  int min;
 };
+int *A;
+struct tipo *B;
+int T;
+int N;
 
 
 
 
 //Para calcular tiempo
 void *proceso1(void *arg){
-  printf("In funtion \nthread id = %d\n", pthread_self());
-
-    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-    int i;
-    for( i= 0;i<mp_1->indice_recorrer_parcial;i++){
-      if(mp_1->M[i]  > mp_1->variablesGuardar[0] ) //busco maximo
+  int ID = *(int*)arg;
+  int tam,ini;
+  if(T==2){
+  if(ID == 0){tam=N/2;ini=0;}
+  else{
+    ini=N/2;
+    tam=N;
+  }}else{
+    if(ID == 0){tam=N/4;ini=0;}
+    if(ID == 1){tam=N/2;ini=N/4;}
+    if(ID == 2){tam=(3*N)/4;ini=N/2;}
+    if(ID == 3){tam=N;ini=(3*N)/4;}
+  }
+    for( int i= ini;i<tam;i++){
+      if(A[i]  > B[ID].max ) //busco maximo
         {
-            mp_1->variablesGuardar[0] = mp_1->M[i];
+            B[ID].max = A[i];
         }
-        if(mp_1->M[i] < mp_1->variablesGuardar[2]  ) //busco minimo
+        if(A[i] < B[ID].min  ) //busco minimo
 
             {
-                mp_1->variablesGuardar[2] = mp_1->M[i];
+                B[ID].min = A[i];
 
             }
 
     }
 
-    return NULL ;
-}
-
-void *proceso2(void *arg){
-    struct matriz_parametros* mp_1 = (struct matriz_parametros*)arg;
-    int i;
-    for(i =mp_1->indice_recorrer_parcial;i<mp_1->indice_recorrer_total;i++){
-      if(mp_1->M[i]  > mp_1->variablesGuardar[1] ) //busco maximo
-        {
-            mp_1->variablesGuardar[1] = mp_1->M[i];
-
-        }
-      if(mp_1->M[i] < mp_1->variablesGuardar[3]  ) //busco minimo
-
-            {
-                mp_1->variablesGuardar[3] = mp_1->M[i];
-
-            }
-
-    }
     return NULL ;
 }
 
@@ -70,61 +60,62 @@ double dwalltime(){
 }
 
 int main ( int argc , char * argv []) {
-    //declaraciones
-    pthread_t h1 ;
-    pthread_t h2 ;
-    double *A,*B,*C;
-    struct matriz_parametros mp;
-    int N;
-    int check = 1;
-    //Controla los argumentos al programa
-     if ((argc != 2) || ((N = atoi(argv[1])) <= 0) )
-    {
-        printf("\nUsar: %s n\n  n: Dimension de la matriz (nxn X nxn)\n", argv[0]);
-        exit(1);
-    }
-    //Inicializa las matrices A y B en 1, el resultado sera una matriz con todos sus valores en N
-    A=(double*)malloc(sizeof(double)*N);
-    B=(double*)malloc(sizeof(double)*4); //Para guardar las variables de maximos y minimos
-    for(int i=0;i<N;i++){
-        A[i] = rand() % N;
-        printf("%f    ",A[i]);
-    }
-    printf("\n");
-    B[0] = -1;
-    B[1] = -1;
-    B[2] = 99999;
-    B[3] = 99999;
+  if ((argc != 3) )
+  {
+      printf("\nUsar: %s n\n  n: Dimension de la matriz (nxn X nxn)\n", argv[0]);
+      exit(1);
+  }
+  T=atoi(argv[2]);
+  N=atoi(argv[1]);
+  if ((T== 2)||(T==4)) {
+    printf("Se van a utilizar %d Hilos \n",T );
+  //DECLARACION DE VARIABLES
+  pthread_t misHilos[T];
+  int threads_ids[T];
+  //RESERVA DE MEMORIA DE VECTORES
+  A=(int*)malloc(sizeof(int)*N);
+  B=(struct tipo*)malloc(sizeof(struct tipo)*T);
 
-    mp.M = A;
-    mp.variablesGuardar = B;
-    mp.indice_recorrer_total = N;
-    mp.indice_recorrer_parcial = mp.indice_recorrer_total / 2; // para recorrer la primera mitad de los valores
-    //ese 2 tiene que ser la cantidad de hilos a recorrer
 
-    double tiempoStart= dwalltime();
-    pthread_create(&h1,NULL,proceso1 ,&mp);
-    pthread_create(&h2,NULL, proceso2 ,&mp);
-    pthread_join(h2,NULL);
-    pthread_join(h1,NULL);
-    printf ( "Fin \n" );
+  //  INICIALIZACION DE VECTORES
+  for (int j = 0; j < T; j++) {
+      B[j].max=-1;
+      B[j].min=9999;
+    /* code */
+  }
+  for(int i=0; i<N;i++){
+      A[i] = rand() % N;
+      printf("%d ", A[i]);
+  }
+  // INICIALIZACION DE HILOS
+  double tiempoStart= dwalltime();
+  for(int id=0;id<T;id++){
+      threads_ids[id] = id;
+      pthread_create(&misHilos[id],NULL,proceso1,(void*)&threads_ids[id]);
+  }
+     for(int i = 1; i<T;i++){
+         pthread_join(misHilos[i],NULL);
+    }
+    printf("\n" );
     printf("El resultado final en Segundos = %f \n",dwalltime()-tiempoStart);
-    printf("\n");
 
-    if(mp.variablesGuardar[0] >= mp.variablesGuardar[1]){
-      printf("el valor maximo es %f\n",mp.variablesGuardar[0] );
-    }else{
-      printf("el valor maximo es %f\n",mp.variablesGuardar[1] );
-    }
-    printf("\n");
-    if(mp.variablesGuardar[2] <= mp.variablesGuardar[3]){
-      printf("el valor minimo es %f\n",mp.variablesGuardar[2] );
-    }else{
-      printf("el valor minmo es %f\n",mp.variablesGuardar[3] );
-    }
 
-    //Verifica el resultad
+    //ANALISIS DE RESULTADO
+    int min=9999;
+    int max=-1;
+    for (int i = 0; i < T; i++) {
+      if (B[i].max > max) {
+          max=B[i].max;
+      }
+      if (B[i].min < min) {
+          min=B[i].min;
+      }
+    }
+    printf("El minimo es %d y el maximo es %d\n",min,max );
+
+
     free(A);
     free(B);
 
+}
 }
